@@ -4,9 +4,11 @@
 
 rangerAdmin:
   image:
-    repository: qnguyen3496/ranger-admin # docker image repository for Ranger Admin
-    tag: 3.0.0-SNAPSHOT # docker image tag for Ranger Admin
+    repository: hienphdev/ranger-admin # docker image repository for Ranger Admin
+    tag: 3.0.0-286066a # docker image tag for Ranger Admin
     pullPolicy: IfNotPresent # Kubernetes image policy for Ranger Admin
+
+replicaCount: 1
     
   installPropertiesPath: /opt/ranger/admin/install.properties # `install.properties` file path for Ranger Admin 
   installPropertiesSecret: "" # secret to use for `install.properties` file in Ranger Admin
@@ -40,11 +42,22 @@ rangerAdmin:
     runAsGroup: 0 # docker user group for Ranger admin
   
 rangerUsersync:
-  enabled: false # enable Ranger Usersync
+  enabled: true # enable Ranger Usersync
   image:
-    repository: qnguyen3496/ranger-usersync # docker image repository for Ranger Usersync
-    tag: 3.0.0-SNAPSHOT # docker image tag for Ranger Usersync
+    repository: hienphdev/ranger-usersync # docker image repository for Ranger Usersync
+    tag: 3.0.0-286066a # docker image tag for Ranger Usersync
     pullPolicy: IfNotPresent # docker image tag for Ranger Usersync
+
+  replicaCount: 1
+  
+  imagePullSecrets: []
+  nameOverride: "ranger-usersync"
+  fullnameOverride: "ranger-usersync"
+
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
     
   installPropertiesPath: /opt/ranger/usersync/install.properties # resource limits and requests for Ranger Usersync
   installPropertiesSecret: "" # secret to use for `install.properties` file in Ranger Usersync
@@ -60,6 +73,12 @@ rangerUsersync:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
+
+  autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
     
   env: [] # environment variables to be use for Ranger Usersync
   
@@ -72,21 +91,10 @@ rangerUsersync:
   affinity: {} # affinity for Ranger Usersync
   
   annotations: {} # annotations for Ranger Usersync
-  
-rangerAuthorizationMatrix:
-  enabled: false # enable Ranger Authorization Matrix
-  image: 
-    repository: qnguyen3496/ranger-authorization-matrix # docker image repository for Ranger Authrorization Matrix
-    tag: latest # docker image tag for Ranger Authrorization Matrix
-    pullPolicy: IfNotPresent # docker image tag for Ranger Authrorization Matrix
-    
-  nodeSelector: {} # node selector for Ranger Authrorization Matrix
-  
-  tolerations: [] # tolerations for Ranger Authrorization Matrix
-  
-  affinity: {} # affinity for Ranger Authrorization Matrix
-  
-  annotations: {} # annotations for Ranger Authrorization Matrix
+
+  securityContext:
+    runAsUser: 0 # docker user code for Ranger UserSync
+    runAsGroup: 0 # docker user group for Ranger UserSync
   
   startupProbe:
     httpGet:
@@ -121,9 +129,9 @@ service:
     type: ClusterIP # Ranger Admin service type, could be `ClusterIP`, `LoadBalancer`, `NodePort`
     port: 6080 # Ranger Admin port to be served
     annotations: {} # Ranger Admin annotations for service
-  rangerAuthorizationMatrix:
+  rangerUsersync:
     type: ClusterIP # Ranger Authorization Matrix service type, could be `ClusterIP`, `LoadBalancer`, `NodePort`
-    port: 8080 # Ranger Authorization Matrix port to be served
+    port: 5151 # Ranger Authorization Matrix port to be served
     annotations: {} # Ranger Authorization Matrix annotations for service
 
 ingress:
@@ -133,15 +141,6 @@ ingress:
     annotations: {} # ingress annotation
     hosts: [] # hostnames for ingresses and which service paths they should map to
     #  - host: ranger.example.com
-    #    paths:
-    #      - path: /
-    #        pathType: ImplementationSpecific
-  rangerAuthorizationMatrix:
-    enabled: false # enable the ingress
-    className: alb # ingress classname, could be `alb`
-    annotations: {} # ingress annotation
-    hosts: [] # hostnames for ingresses and which service paths they should map to
-    #  - host: ranger-authorization-matrix.example.com
     #    paths:
     #      - path: /
     #        pathType: ImplementationSpecific
