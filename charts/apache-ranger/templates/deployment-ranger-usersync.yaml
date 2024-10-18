@@ -26,6 +26,11 @@ spec:
         release: {{ .Release.Name }}
         component: apache-ranger-usersync
     spec:
+      {{- with .Values.rangerAdmin.securityContext }}
+      securityContext:
+        runAsUser: {{ .runAsUser }}
+        runAsGroup: {{ .runAsGroup }}
+      {{- end }}    
       containers:
         - name: {{ .Chart.Name }}-usersync
           image: "{{ .Values.rangerUsersync.image.repository }}:{{ .Values.rangerUsersync.image.tag | default .Chart.AppVersion }}"
